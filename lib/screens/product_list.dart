@@ -3,35 +3,19 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'product_card.dart';
 import 'cartscreen.dart';
+import 'product.dart';
+import 'admin_page.dart';
 
-String _baseURL='vintageclothes.atwebpages.com';
+const String _baseURL = 'vintageclothes.atwebpages.com';
 
-class Product {
-  final String name;
-  final double price;
-  final String desc;
-  final List<String> imageUrls;
-
-  Product({required this.name, required this.price, required this.desc, required this.imageUrls});
-
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
-      name: json['name'],
-      price: double.parse(json['price']),
-      desc: json['desc'],
-      imageUrls: List<String>.from(json['imageUrls']),
-    );
-  }
-} 
-class ProductDetailScreen extends StatefulWidget {
-
-  const ProductDetailScreen({super.key});
+class ProductListScreen extends StatefulWidget {
+  const ProductListScreen({super.key});
 
   @override
-  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  State<ProductListScreen> createState() => _ProductListScreenState();
 }
 
-class _ProductDetailScreenState extends State<ProductDetailScreen> {
+class _ProductListScreenState extends State<ProductListScreen> {
   List<Product> products = [];
   bool isLoading = true;
 
@@ -40,26 +24,37 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.initState();
     getProducts();
   }
-  void getProducts()async{
-    final url = Uri.http(_baseURL, '/getproducts.php');
-    final response = await http.get(url)
-        .timeout(const Duration(seconds: 5)); // max timeout 5 seconds
-    products.clear(); // clear old products
-    if (response.statusCode == 200) {
-      final List<dynamic> productJson = json.decode(response.body);
-      setState(() {
-        products = productJson.map((json) => Product.fromJson(json)).toList();
-        isLoading = false;
-      });
-      }
-      // if successful call
 
-     else {
-      // Handle the error
-      throw Exception('Failed to load products');
+  Future<void> getProducts() async {
+    try {
+      final url = Uri.http(_baseURL, '/getproducts.php');
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final responseBody = response.body;
+        print('Response body: $responseBody'); // Print the response body
+        final List<dynamic> productJson = json.decode(responseBody);
+        setState(() {
+          products = productJson.map((json) => Product.fromJson(json)).toList();
+          isLoading = false;
+        });
+        for (var product in products) {
+          print('Product: ${product.name}, Image URL: ${product.imageUrls}');
+        }
+      } else {
+        showErrorSnackBar('Failed to load products: ${response.statusCode}');
+      }
+    } catch (error) {
+      showErrorSnackBar('Failed to load products: $error');
     }
   }
 
+
+  void showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    setState(() {
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,36 +73,47 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           IconButton(
             icon: Icon(Icons.shopping_cart),
             onPressed: () {
-              // Navigate to cart screen or show cart details
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => CartScreen()), // Ensure CartScreen is defined
               );
             },
           ),
-          SizedBox(width: 10), // Add spacing if needed
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AdminPage()),
+              );
+              if (result == true) {
+                getProducts(); // Refresh the product list if a product was added
+              }
+            },
+          ),
+          SizedBox(width: 10),
         ],
       ),
-      body: Container(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Container(
         color: Color(0xFFFAEBD7),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2, // Two items per row
-            crossAxisSpacing: 8.0, // Spacing between columns
-            mainAxisSpacing: 8.0,  // Spacing between rows
+        child: RefreshIndicator(
+          onRefresh: getProducts,
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+            ),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return ProductCard(product: product);
+            },
           ),
-          itemCount: products.length,
-          itemBuilder: (context, index) {
-            final product = products[index];
-            return ProductCard(product: product);
-          },
         ),
       ),
     );
   }
 }
-
-
-
-
-

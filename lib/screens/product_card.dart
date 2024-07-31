@@ -1,6 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'product.dart';
 import 'product_detail.dart';
-import 'product_list.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -9,30 +10,39 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Unescape the URL
+    String imageUrl = product.imageUrls.isNotEmpty
+        ? Uri.decodeFull(product.imageUrls[0])
+        : '';
+
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => ProductDetailScreen(product: product),
-          ),
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProductDetailScreen(product: product)),
         );
       },
       child: Card(
-        elevation: 5.0,
-        margin: EdgeInsets.all(8.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: AspectRatio(
-                aspectRatio: 1.2,
-                child: Image.asset(
-                  'assets/products/${product.imageUrls.isNotEmpty ? product.imageUrls[0] : 'placeholder.jpg'}',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    print('Failed to load image: assets/products/${product.imageUrls.isNotEmpty ? product.imageUrls[0] : 'placeholder.jpg'}');
-                    return Center(child: Text('Image not available'));
-                  },
-                ),
+              child: imageUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+                errorWidget: (context, url, error) {
+                  print('Failed to load image: $imageUrl');
+                  return Container(
+                    color: Colors.blue,
+                    child: Center(child: Text('Failed to load image')),
+                  );
+                },
+              )
+                  : Container(
+                color: Colors.grey,
+                child: Center(child: Text('No image available')),
               ),
             ),
             Padding(
@@ -44,10 +54,9 @@ class ProductCard extends StatelessWidget {
                     product.name,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 4.0),
                   Text(
-                    '\$${product.price}',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    '\$${product.price.toStringAsFixed(2)}',
+                    style: TextStyle(fontSize: 14),
                   ),
                 ],
               ),

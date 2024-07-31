@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ranim_flutter/screens/login.dart';
-import 'package:ranim_flutter/screens/signup.dart';
 import 'package:provider/provider.dart';
 import 'cartprovider.dart';
+import 'login.dart';
+import 'signup.dart';
 
 class CartScreen extends StatelessWidget {
   @override
@@ -17,7 +17,7 @@ class CartScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.restore),
             onPressed: () {
-              cart.clearCart(); // Assuming this clears all items; change if necessary
+              cart.clearCart(); // Clear all items in the cart
             },
           ),
         ],
@@ -44,13 +44,7 @@ class CartScreen extends StatelessWidget {
               ),
               title: Text(item.name),
               subtitle: Text('Quantity: ${item.quantity}, Size: ${item.size}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('\$${item.price * item.quantity}'),
-
-                ],
-              ),
+              trailing: Text('\$${item.price * item.quantity}'),
             );
           },
         ),
