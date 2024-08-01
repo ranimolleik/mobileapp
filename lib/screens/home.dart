@@ -74,46 +74,56 @@ class _HomeState extends State<Home> {
               style: TextStyle(fontSize: 24, color: Color(0xFF708238)),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => ProductListScreen()),
-                );
-              },
-              child: const Text(
-                'Shop Now',
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF708238),
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 5,
-              ),
-            ),
-            const SizedBox(height: 20),
-            if (!authProvider.isLoggedIn)
+            if (authProvider.isLoggedIn) ...[
               ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => ProductListScreen()),
+                  );
+                },
+                child: const Text(
+                  'Shop Now',
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF708238),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 5,
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+            if (!authProvider.isLoggedIn)
+              ElevatedButton.icon(
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => SignUpPage()),
                   );
                 },
-                child: const Text('Sign Up',
-                    style: TextStyle(fontSize: 16, color: Color(0xFF708238))),
+                icon: Icon(Icons.person_add, color: Color(0xFF708238)), // Add an icon
+                label: const Text(
+                  'Sign Up',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF708238),
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  backgroundColor: Colors.white, // Background color
+                  overlayColor: Color(0xFF708238), // Text color
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  side: const BorderSide(color: Color(0xFF708238), width: 1),
+                  side: BorderSide(color: Color(0xFF708238), width: 2), // Border color and width
+                  elevation: 5, // Shadow effect
                 ),
               ),
           ],

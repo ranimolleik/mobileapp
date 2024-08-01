@@ -26,25 +26,27 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: imageUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                errorWidget: (context, url, error) {
-                  print('Failed to load image: $imageUrl');
-                  return Container(
-                    color: Colors.blue,
-                    child: Center(child: Text('Failed to load image')),
-                  );
-                },
-              )
-                  : Container(
-                color: Colors.grey,
-                child: Center(child: Text('No image available')),
-              ),
-            ),
+         Expanded(
+        child: imageUrl.isNotEmpty
+        ? CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+          errorWidget: (context, url, error) {
+            print('Failed to load image: $imageUrl, error: $error');
+            return Container(
+              color: Colors.blue,
+              child: Center(child: Text('Failed to load image')),
+            );
+          },
+        )
+            : Container(
+        color: Colors.blue,
+        child: Center(child: Text('Image URL is empty')),
+      ),
+    ),
+
+
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(

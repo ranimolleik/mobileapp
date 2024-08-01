@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:provider/provider.dart';
 import 'cartprovider.dart';
+import 'auth.dart';
 import 'product.dart';
 import 'cartscreen.dart';
+import 'signup.dart';
+import 'login.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -20,6 +23,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.product.name),
@@ -147,26 +153,135 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
-                      final cart = Provider.of<CartProvider>(context, listen: false);
-                      cart.addToCart(widget.product.name, widget.product.price, _quantity, _selectedSize, widget.product.imageUrls[0]);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Added to cart: ${widget.product.name}')),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF708238),
-                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                      textStyle: TextStyle(fontSize: 20),
-                    ),
-                    child: Text('Add to Cart', style: TextStyle(color: Colors.white)),
-                  ),
+
+    onPressed: () async {
+    final cartItem = CartItem(
+    id: widget.product.id, // Assuming Product has an id (String)
+    name: widget.product.name,
+    price: widget.product.price,
+    quantity: _quantity,
+    size: _selectedSize,
+    imageUrl: widget.product.imageUrls.isNotEmpty ? widget.product.imageUrls[0] : '', // Check for empty imageUrls
+    );
+
+    // Add to local cart
+    cart.addToCart(cartItem);
+
+    // Try to get the user's email
+    final userEmail = auth.userEmail; // Nullable String
+
+    if (userEmail != null) {
+    try {
+    // Print values for debugging
+    print('Adding to cart with values: userId=$userEmail, productId=${widget.product.id}, quantity=$_quantity, size=$_selectedSize');
+
+    // Convert product ID from String to int
+    final productId = int.tryParse(widget.product.id) ?? 0; // Default to 0 if conversion fails
+
+    // Ensure userId is an int
+    final userId = int.tryParse(userEmail) ?? 0; // Default to 0 if conversion fails
+
+    // Call addTocart with the correct types
+    cart.addTocart(
+    (responseText) {
+    ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+    content: Text(responseText.contains("error")
+    ? 'Failed to add to cart: $responseText'
+        : 'Added to cart: ${widget.product.name}'),
+    backgroundColor: responseText.contains("error") ? Colors.red : Colors.green,
+    ),
+    );
+    },
+    productId, // Now an int
+    userId,    // Now an int
+    _quantity, // Should be an int
+    _selectedSize // Should be a String
+    );
+    } catch (e) {
+    // Handle any unexpected errors
+    ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+    content: Text('Failed to add to cart. Please try again.'),
+    backgroundColor: Colors.red,
+    ),
+    );
+    print('Error: $e');
+    }
+    } else {
+    // Handle case where user email is not available
+    ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+    content: Text('User email is not available. Please log in.'),
+    backgroundColor: Colors.red,
+    ),
+    );
+    }
+    },
+    style: ElevatedButton.styleFrom(
+    backgroundColor: Color(0xFF708238),
+    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+    textStyle: TextStyle(fontSize: 20),
+    ),
+    child: Text('Add to Cart', style: TextStyle(color: Colors.white)),
+        ),
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showAuthOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Please sign up or log in to continue',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignUpPage()),
+                  );
+                },
+                child: Text('Sign Up'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF708238),
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  textStyle: TextStyle(fontSize: 20),
+                ),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                  );
+                },
+                child: Text('Log In'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF708238),
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  textStyle: TextStyle(fontSize: 20),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

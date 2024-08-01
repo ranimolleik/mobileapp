@@ -2,11 +2,10 @@ import 'package:http/http.dart' as http;
 import 'login.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert' as convert;
-import 'package:provider/provider.dart';
-import 'auth.dart';
-import 'home.dart';
+import 'product_card.dart';
+import'home.dart';
 
-String _baseURL = 'vintageclothes.atwebpages.com';
+String _baseURL='vintageclothes.atwebpages.com';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -20,51 +19,33 @@ class _SignUpPageState extends State<SignUpPage> {
   final _confirmPasswordController = TextEditingController();
   final _locationController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _loading = false;
+  bool _loading=false;
 
   void signup(Function(String text) update, String username, String email,
       String password, String location) async {
     try {
-      // Send a JSON object using HTTP POST
-      final url = Uri.https(_baseURL, '/signup.php');
+      // send a JSON object using http post
+      final url = Uri.http(_baseURL, '/signup.php');
       final response = await http.post(
-        url,
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: convert.jsonEncode(<String, String>{
-          'username': username,
-          'email': email,
-          'password': password,
-          'location': location,
-        }),
-      ).timeout(const Duration(seconds: 5));
-
-      // Log the full response for debugging
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final responseBody = convert.jsonDecode(response.body);
-        if (responseBody['success']) {
-          // Update AuthProvider state
-          Provider.of<AuthProvider>(context, listen: false).login(email);
-
-          // Navigate to the HomePage or any other page
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => Home()),
-          );
-        } else {
-          update(responseBody['error'] ?? 'Signup failed');
-        }
-      } else {
-        update('Error signing up. Please try again.');
-      }
-    } catch (e) {
-      update("Connection error: $e");
+          url,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          }, // convert the cid, name and key to a JSON object
+          body: convert.jsonEncode(<String, String>{
+            'username': username,
+            'email': email,
+            'password': password,
+            'location': location,
+          })).timeout(const Duration(seconds: 5));
+      // call the update function
+      update(response.body);
+      // Navigate to the HomePage or any other page
+    }
+    catch (e) {
+      update("connection error");
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -181,24 +162,21 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: _loading
-                        ? null
-                        : () {
-                      if (_formKey.currentState!.validate()) {
+                    onPressed:_loading ? null : (){
+                      if (_formKey.currentState!.validate()){
                         setState(() {
-                          _loading = true;
+                          _loading=true;
                         });
 
-                        signup(
-                          update,
-                          _usernameController.text,
-                          _emailController.text,
-                          _passwordController.text,
-                          _locationController.text,
-                        );
+                        signup(update,_usernameController.text,_emailController.text,
+                            _passwordController.text, _locationController.text);
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context)=>LoginPage()));
                       }
+
                     },
+
                     child: Text('Sign Up'),
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF708238),
                       padding: EdgeInsets.symmetric(
@@ -211,7 +189,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => LoginPage()),
+                        MaterialPageRoute(
+                            builder: (context) => LoginPage()),
                       );
                     },
                     child: Text(
@@ -228,11 +207,11 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
     );
   }
-
   void update(String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
     setState(() {
       _loading = false;
     });
   }
+
 }

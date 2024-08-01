@@ -25,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
       print('JSON Data: $jsonData'); // Print the JSON data
 
       final url =
-      Uri.parse('http://vintageclothes.atwebpages.com/login.php'); // Change to your actual URL
+      Uri.parse('http://vintageclothes.atwebpages.com/login.php');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
